@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asg-raop"
+version = "0.1.0"
+description = "Autonomous Smart Grid & Renewable Asset Orchestration Platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Ayan Ghosh", email = "ghoshayan09@gmail.com" }
+]
+license = { text = "Apache-2.0" }
+dependencies = [
+    "requests>=2.31.0",
+    "pandas>=2.2.0",
+    "polars>=0.20.0",
+    "numpy>=1.26.0",
+    "pydantic>=2.6.0",
+    "lightgbm>=4.3.0",
+    "onnxruntime>=1.17.0",
+    "pandapower>=2.14.0",
+    "simbench>=1.4.0",
+    "Pillow>=10.0.0",
+    "pyarrow>=14.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.3.0",
+    "typeguard>=4.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test_pipeline.py"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["libs", "modules"]

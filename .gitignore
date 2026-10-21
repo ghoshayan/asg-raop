@@ -1,0 +1,37 @@
+# Virtual environment
+.venv/
+
+# Raw data caches (large binary blobs, fetched at runtime)
+data/smard/
+data/elpv/
+data/opsd/
+data/logs/
+*.parquet
+
+# ONNX model weights
+*.onnx
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Secrets & env
+.env
+*.env
+
+# IDE artefacts
+.idea/
+.vscode/
+*.swp
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
