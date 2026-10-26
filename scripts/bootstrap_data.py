@@ -133,9 +133,10 @@ def fetch_d5_opsd_slice(force: bool = False) -> None:
         "utc_timestamp",
         "DE_solar_generation_actual",
         "DE_solar_capacity",
-        "DE_temperature",
-        "DE_radiation_direct_horizontal",
-        "DE_radiation_diffuse_horizontal",
+        "DE_solar_profile",
+        "DE_wind_generation_actual",
+        "DE_wind_capacity",
+        "DE_load_actual_entsoe_transparency",
     ]
 
     try:
