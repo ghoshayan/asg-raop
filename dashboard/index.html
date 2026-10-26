@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASG-RAOP — Smart Grid & Renewable Asset Orchestration Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-orb"></div>
+        <div>
+          <h1 id="app-title">ASG-RAOP Cockpit</h1>
+          <p class="subtitle">Autonomous Smart Grid & Renewable Asset Orchestration Platform</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-pill status-ready" id="system-status-indicator">
+          <span class="pulse-dot"></span> System Operational
+        </span>
+        <span class="regulatory-tag">EnWG §13 &bull; BNetzA Redispatch 2.0 &bull; EU AI Act Art. 14</span>
+      </div>
+    </header>
+
+    <!-- Top Dispatch Control Bar -->
+    <section class="control-panel glass-card">
+      <div class="control-group">
+        <label for="mode-select">SMARD Telemetry Source</label>
+        <select id="mode-select" class="custom-select">
+          <option value="fixture" selected>Fixture (30-day Quarter-Hour SMARD)</option>
+          <option value="live">Live BNetzA Stream (SMARD.de API)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="topology-select">Grid Network Topology</label>
+        <select id="topology-select" class="custom-select">
+          <option value="example-mv" selected>Cigré MV Benchmark (15 Lines, Overload Test)</option>
+          <option value="simbench-mv-rural">SimBench Rural MV (1-MV-rural--0-sw)</option>
+          <option value="simbench-mv-urban">SimBench Urban MV (1-MV-urban--0-sw)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="sample-select">Solar Cell Electroluminescence</label>
+        <select id="sample-select" class="custom-select">
+          <option value="tests/fixtures/elpv_samples/functional_cell.png" selected>Functional Cell (0.0 defect)</option>
+          <option value="tests/fixtures/elpv_samples/microcrack_cell.png">Microcrack Cell (0.33 defect)</option>
+          <option value="tests/fixtures/elpv_samples/busbar_corrosion.png">Busbar Corrosion (0.66 defect)</option>
+          <option value="tests/fixtures/elpv_samples/severely_damaged.png">Severely Damaged (1.0 defect)</option>
+        </select>
+      </div>
+
+      <div class="control-actions">
+        <button id="run-pipeline-btn" class="btn btn-primary">
+          <span class="btn-icon">⚡</span> Run Full Pipeline Dispatch
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Grid Dashboard (4 Module Cards) -->
+    <main class="dashboard-grid">
+      <!-- Module 1: Forecaster -->
+      <article class="module-card glass-card" id="card-forecaster">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <span class="module-number">01</span>
+            <h2>Temporal Forecaster</h2>
+          </div>
+          <span class="badge badge-tech" id="forecast-model-badge">LightGBM-v1</span>
+        </div>
+        
+        <div class="metrics-row">
+          <div class="metric">
+            <span class="metric-label">Predicted Solar Output (q50)</span>
+            <span class="metric-value" id="val-predicted-solar">-- <span class="unit">MW</span></span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Quantile Interval [q10 &ndash; q90]</span>
+            <span class="metric-value-sub" id="val-quantile-band">-- &ndash; -- MW</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-header">
+            <span>Forecast Curve (Uncertainty Envelope)</span>
+            <span class="live-clock" id="forecast-timestamp">Waiting for dispatch...</span>
+          </div>
+          <svg id="forecast-chart-svg" class="chart-svg" viewBox="0 0 400 120">
+            <!-- Simulated background grid -->
+            <line x1="0" y1="30" x2="400" y2="30" class="chart-gridline" />
+            <line x1="0" y1="60" x2="400" y2="60" class="chart-gridline" />
+            <line x1="0" y1="90" x2="400" y2="90" class="chart-gridline" />
+            <!-- Area & Line paths injected dynamically -->
+            <path id="svg-uncertainty-band" d="" class="svg-envelope" />
+            <path id="svg-median-line" d="" class="svg-median" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Module 2: Vision Asset Inspector -->
+      <article class="module-card glass-card" id="card-vision">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <span class="module-number">02</span>
+            <h2>Vision Asset Inspector</h2>
+          </div>
+          <span class="badge" id="vision-defect-badge">Pristine Wafer</span>
+        </div>
+
+        <div class="vision-layout">
+          <div class="image-preview-frame">
+            <img id="el-preview-img" src="/fixtures/functional_cell.png" alt="Electroluminescence wafer scan" />
+            <div class="scan-overlay"></div>
+          </div>
+          <div class="vision-metrics">
+            <div class="metric">
+              <span class="metric-label">Degradation Scalar (D_pv)</span>
+              <span class="metric-value" id="val-degradation-scalar">0.000 <span class="unit">scalar</span></span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Effective Solar Injected (P_eff)</span>
+              <span class="metric-value highlight" id="val-effective-solar">-- <span class="unit">MW</span></span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Derating Ratio</span>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="derating-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Module 3: Physical Grid Simulator -->
+      <article class="module-card glass-card" id="card-grid">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <span class="module-number">03</span>
+            <h2>Physical Grid Simulator</h2>
+          </div>
+          <span class="badge" id="grid-status-badge">Nominal</span>
+        </div>
+
+        <div class="grid-metrics-row">
+          <div class="metric-card-inner">
+            <span class="metric-label">Max Thermal Line Loading</span>
+            <div class="loading-gauge-wrap">
+              <span class="gauge-value" id="val-max-loading">-- %</span>
+              <span class="threshold-note">80.0% Thermal Limit</span>
+            </div>
+            <div class="loading-bar-bg">
+              <div class="loading-bar-fill" id="loading-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-card-inner">
+            <span class="metric-label">Bus Voltage Band (EN 50160)</span>
+            <span class="metric-value-sub" id="val-bus-voltages">0.85 &le; V &le; 1.15 p.u.</span>
+            <div class="voltage-band-visual">
+              <div class="voltage-safe-zone">
+                <div class="voltage-marker" id="voltage-marker" style="left: 50%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="critical-lines-section">
+          <span class="section-label">Critical Network Segments:</span>
+          <div class="tags-container" id="critical-lines-tags">
+            <span class="tag tag-empty">No thermal overloads detected</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Module 4: Agentic Copilot & Human Gatekeeper -->
+      <article class="module-card glass-card card-accent" id="card-copilot">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <span class="module-number">04</span>
+            <h2>Agentic Copilot & EU AI Act Gate</h2>
+          </div>
+          <span class="badge badge-danger" id="scada-barrier-badge">🔒 SCADA BLOCKED</span>
+        </div>
+
+        <div class="incident-summary-box" id="incident-box">
+          <div class="incident-title" id="incident-title">No Active Contingency</div>
+          <p id="incident-text">Grid operating within nominal thermal and voltage bounds. No curtailment required.</p>
+        </div>
+
+        <!-- Human-in-the-Loop Gateway Console -->
+        <div class="operator-gate-console" id="operator-gate-console">
+          <div class="gate-header">
+            <span class="gate-icon">🛡️</span>
+            <div>
+              <h3>Human-in-the-Loop Verification Gateway</h3>
+              <p>EU AI Act Article 14 Compliance: Automated actuation strictly prohibited without human operator authorization.</p>
+            </div>
+          </div>
+
+          <div class="proposal-details" id="proposal-details">
+            <div class="proposal-item">
+              <span>Proposed Curtailment:</span>
+              <strong id="proposal-mw">0.00 MW</strong>
+            </div>
+            <div class="proposal-item">
+              <span>Legal Statutory Basis:</span>
+              <strong id="proposal-legal">EnWG §13 Abs. 1</strong>
+            </div>
+          </div>
+
+          <div class="gate-inputs">
+            <div class="input-field">
+              <label for="operator-id-input">Operator Identifier (EU ID)</label>
+              <input type="text" id="operator-id-input" placeholder="e.g. OP-GRID-BERLIN-88" value="OP-DE-BERLIN-01" />
+            </div>
+            <div class="checkbox-field">
+              <input type="checkbox" id="compliance-check" />
+              <label for="compliance-check">I confirm independent verification of load-flow conditions under EnWG §13 and sign this dispatch order.</label>
+            </div>
+          </div>
+
+          <button id="approve-dispatch-btn" class="btn btn-danger" disabled>
+            <span class="btn-icon">✍️</span> Electronically Sign & Authorize SCADA Write
+          </button>
+        </div>
+      </article>
+    </main>
+
+    <!-- Bottom Audit Log -->
+    <section class="audit-section glass-card">
+      <div class="audit-header">
+        <h3>📋 Immutable Regulatory Incident Audit Log (data/logs/incidents.jsonl)</h3>
+        <span class="audit-count" id="audit-count">0 Recorded Incidents</span>
+      </div>
+      <div class="audit-table-wrap">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Incident ID</th>
+              <th>Curtailment</th>
+              <th>Legal Authority</th>
+              <th>Operator Sign-off</th>
+              <th>SCADA Status</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody">
+            <tr>
+              <td colspan="6" class="text-center">No regulatory incidents logged in current session.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
