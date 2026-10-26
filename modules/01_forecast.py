@@ -190,8 +190,6 @@ def _forecast_lightgbm(df: pd.DataFrame) -> tuple[float, float, float]:
 
     Uses the last 80 % of data for training; 20 % for validation.
     """
-    from sklearn.model_selection import TimeSeriesSplit  # type: ignore
-
     df_feat = _engineer_features(df)
     if len(df_feat) < 96:
         logger.warning(
