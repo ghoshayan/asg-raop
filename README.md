@@ -59,6 +59,10 @@ python pipeline.py --image-path tests/fixtures/elpv_samples/microcrack_cell.png
 
 # 6. Fetch full open datasets (D4 FAU ELPV & D5 OPSD Parquet)
 python scripts/bootstrap_data.py
+
+# 7. Launch Interactive Operator Web Cockpit
+python scripts/run_dashboard.py
+# Open http://localhost:8000 in your browser
 ```
 
 ## Regulatory Compliance
